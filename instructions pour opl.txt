@@ -1,0 +1,9 @@
+100 => 1000
+
+1000 / 100 => 10 € (rapport prix antenne / nombre points couverts)
+
+naviguer tous les points non couverts
+sur chaque points, tester l'installation chaque antenne
+prendre l'antenne qui donne le meilleur rapport ((Nombre de points couverts) / cout antenne)
+installer la meilleure antenne uniquememt quand tous les points non couverts ont été parcourus dans la boucle
+répéter navigueur tous les poitns jusqu'a ce que il n'y a pas de poitns non couverts
