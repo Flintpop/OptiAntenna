@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <string.h>
+#include "getPoints.h"
 
 // genPoints <nbPoints> [<seed>]
 // les points sont à la fois les points à couvrir et les points possibles pour les antennes
@@ -33,8 +33,105 @@ visibilite = [
 // les antennes doivent etre saisies � part
 // cf doTestsCouverture
 
-int main(int argc, char *argv[])
-{
+/*
+ * Cette fonction affiche la liste des multiples de n_points du arr->matriceleau matrice
+ */
+void print_list_multiples(modular_array *arr) {
+    for (int k = 0; k < arr->n_multiples; ++k) {
+        printf("[");
+        for (int l = 0; l < 2; ++l) {
+            if (l == 1) {
+                printf("%d", arr->matrice[k][l]);
+            } else {
+                printf("%d, ", arr->matrice[k][l]);
+            }
+        }
+        printf("]\n");
+    }
+}
+
+/*
+ * Cette fonction vérifie si il faut agrandir le arr->matriceleau matrice
+ */
+void check_realloc_arr(modular_array *arr) {
+    if (arr->n_multiples == arr->taille) {
+        arr->taille = arr->taille + arr->taille_bloc;
+        arr->matrice = (int **) realloc(arr->matrice, sizeof(int *) * arr->taille);
+        for (int m = 0; m < arr->taille; ++m) {
+            arr->matrice[m] = (int *) realloc(arr->matrice[m], sizeof(int) * 2);
+        }
+    }
+}
+
+/*
+ * Initialise le type modular_array ainsi que la matrice qui va contenir les multiples de n_points
+ */
+modular_array *construct_modular_array() {
+    modular_array *arr;
+    arr = (struct modular_array *) malloc(sizeof(modular_array));
+    arr->n_multiples = 0;
+    arr->taille_bloc = 5;
+    arr->taille = arr->taille_bloc;
+    arr->matrice = (int **) malloc(sizeof(int *) * arr->taille);
+    for (int k = 0; k < arr->taille; ++k) {
+        arr->matrice[k] = (int *) malloc(sizeof(int) * 2);
+    }
+}
+
+/*
+ * Libère la mémoire allouée pour le type modular_array
+ */
+void free_modular_array(modular_array *arr) {
+    for (int k = 0; k < arr->taille; ++k) {
+        free(arr->matrice[k]);
+    }
+    free(arr->matrice);
+}
+
+/*
+ * Cette fonction vérifie si k et l sont des multiples de n_points et les ajoute dans la matrice
+ */
+void check_multiple(int k, int l, int n_points, modular_array *arr) {
+    if ((k * l) == n_points) {
+        arr->matrice[arr->n_multiples][0] = k;
+        arr->matrice[arr->n_multiples][1] = l;
+        (arr->n_multiples)++;
+        check_realloc_arr(arr);
+    }
+}
+
+/*
+ * Cette fonction cherche les multiples de n_points les plus équilibrés pour faire la matrice de points
+ */
+void find_multiples(int n_points, int *i, int *j) {
+    // Construction de arr qui est un struct qui contient la matrice des multiples de n_points et divers lié
+    // à la matrice
+    modular_array *arr = construct_modular_array();
+
+    // On cherche les multiples de n_points les plus équilibrés pour faire la matrice de points
+    for (int k = 1; k < n_points; ++k) {
+        for (int l = k; l <= n_points; ++l) {
+            check_multiple(k, l, n_points, arr);
+        }
+    }
+
+    if (arr->n_multiples == 0) {
+        fprintf(stderr, "Erreur, pas de multiples de n trouvés\n");
+        exit(1);
+    }
+
+    // On a trouvé les multiples de n_points les plus équilibrés pour faire la matrice de points
+
+    // i est le premier multiple choisi, le plus petit
+    *i = arr->matrice[arr->n_multiples - 1][0];
+    // j est le second multiple choisi, le plus grand
+    *j = arr->matrice[arr->n_multiples - 1][1];
+
+    free_modular_array(arr);
+}
+
+int main(int argc, char *argv[]) {
+    struct modular_array test;
 
     int i, j;
     if (argc < 2) goto usage;
@@ -43,66 +140,17 @@ int main(int argc, char *argv[])
     if (argc == 3) srand(atoi(argv[2]));
 
     int n_points = rand() % n;
-    if (n_points  <= 8) {
+    if (n_points <= 8) {
         n_points = 8;
     }
+//    n_points = 13 + 1;
     printf("n_points = %d\n", n_points);
 
-    // I have to write n lines of the following pattern in the printf function.
-    // The last line must not be with ','
-    // n, n changes from 1, sqrt(N) and 1, sqrt(N)
-    // It is 2 for loops
-    int lignes = (int) sqrt(n);
-    if (lignes * lignes != n) {
-        fprintf(stderr, "Erreur, pas égal a lignes * lignes : %d et %d\n", lignes, lignes * lignes);
-        exit(1);
-    }
+    find_multiples(n_points, &i, &j);
 
-    int n_multiples = 0;
-    int taille_bloc = 5;
-    int taille = taille_bloc;
-    int ** tab = (int **) malloc(sizeof(int *) * taille);
-    for (int k = 0; k < taille; ++k) {
-        tab[k] = (int *) malloc(sizeof(int) * 2);
-    }
-
-    for (int k = 1; k < n_points; ++k) {
-        for (int l = k; l <=  n_points; ++l) {
-            if ((k * l) == n_points) {
-                tab[n_multiples][0] = k;
-                tab[n_multiples][1] = l;
-                n_multiples++;
-                if (n_multiples == taille) {
-                    taille = taille + taille_bloc;
-                    tab = (int **) realloc(tab, sizeof(int *) * taille);
-                    for (int m = 0; m < taille; ++m) {
-                        tab[m] = (int *) realloc(tab[m], sizeof(int) * 2);
-                    }
-                }
-            }
-        }
-    }
-    if (n_multiples == 0) {
-        fprintf(stderr, "Erreur, pas de multiples de n trouvés\n");
-        exit(1);
-    }
-
-//    for (int k = 0; k < n_multiples; ++k) {
-//        printf("[");
-//        for (int l = 0; l < 2; ++l) {
-//            if(l == 1) {
-//                printf("%d", tab[k][l]);
-//            } else {
-//                printf("%d, ", tab[k][l]);
-//            }
-//        }
-//        printf("]\n");
-//    }
-    i = tab[n_multiples - 1][0];
-    j = tab[n_multiples - 1][1];
     printf("points = {\n");
-    for (int k = 1; k < i+1; ++k) {
-        for (int l = 1; l < j+1; ++l) {
+    for (int k = 1; k < i + 1; ++k) {
+        for (int l = 1; l < j + 1; ++l) {
             if (k == i && l == j) {
                 printf("< %d, %d>\n", k, l);
             } else
@@ -113,17 +161,17 @@ int main(int argc, char *argv[])
 
     printf("\nvisibilite = [\n");
     for (int k = 0; k < n_points; ++k) {
-        
+        printf("[");
+        for (int l = 0; l < n_points; ++l) {
+            printf(" %d ", rand() % 2);
+        }
+        printf("]\n");
     }
-    // A vous
-    // generer une matrice de visibilite
     printf("];\n");
-
 
     return 0;
     usage:
     fprintf(stderr, "usage: %s <nbPoints> [<seed>]\n", argv[0]);
     return 1;
-
 
 }
