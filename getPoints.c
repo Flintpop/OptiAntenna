@@ -28,14 +28,14 @@ visibilite = [
 ];
 */
 
-// A utiliser pour ajouter a couv.dat les points: ./genPoints 100 3 >> couv.dat
+// A utiliser pour ajouter à couv.dat les points: ./genPoints 100 3 >> couv.dat
 // les antennes doivent etre saisies � part
 // cf doTestsCouverture
 
 /*
  * Cette fonction affiche la liste des multiples de n_points du arr->matriceleau matrice
  */
-__attribute__((unused)) void print_list_multiples(modular_array *arr) {
+__attribute__((unused)) void print_list_multiples(modular_array const *arr) {
     for (int k = 0; k < arr->n_multiples; ++k) {
         printf("[");
         for (int l = 0; l < 2; ++l) {
@@ -91,7 +91,7 @@ void free_modular_array(modular_array *arr) {
 /*
  * Cette fonction vérifie si k et l sont des multiples de n_points et les ajoute dans la matrice
  */
-void check_multiple(int k, int l, int n_points, modular_array *arr) {
+void check_multiple(int k, int l, long n_points, modular_array *arr) {
     if ((k * l) == n_points) {
         arr->matrice[arr->n_multiples][0] = k;
         arr->matrice[arr->n_multiples][1] = l;
@@ -120,7 +120,7 @@ void print_points(int i, int j) {
 /*
  * Cette fonction cherche les multiples de n_points les plus équilibrés pour faire la matrice de points
  */
-void find_multiples(int n_points, int *i, int *j) {
+void find_multiples(long n_points, int *i, int *j) {
     // Construction d'arr qui est un struct qui contient la matrice des multiples de n_points et divers lié
     // à la matrice
     modular_array *arr = construct_modular_array();
@@ -150,8 +150,8 @@ void find_multiples(int n_points, int *i, int *j) {
 
 /*
  * Donne un chiffre 0 ou 1, en fonction d'un pourcentage donné en paramètre.
- * Si le chiffre est de 80, la fonction donnerait un 1 80 fois et un 0 20 fois du temps.
- * Donc si le chiffre est de 20, le 1 serait retourné 20 fois et 0 80 fois.
+ * Si le chiffre était de 80, la fonction donnerait un 1 80 fois et un 0 20 fois du temps.
+ * Donc si le chiffre était de 20, le 1 serait retourné 20 fois et 0 80 fois.
  */
 int get_visibility_information(int pourcentage) {
     if (pourcentage < 0 || pourcentage > 99) {
@@ -167,7 +167,7 @@ int get_visibility_information(int pourcentage) {
     return res;
 }
 
-void print_visibility_array(int n_points, int pourcentage) {
+void print_visibility_array(long n_points, int pourcentage) {
     printf("\nvisibilite = [\n");
     for (int k = 0; k < n_points; ++k) {
         printf("[");
@@ -183,12 +183,19 @@ int main(int argc, char *argv[]) {
     int i, j;
     if (argc < 2) goto usage;
 
-    int n = atoi(argv[1]);
-    if (argc == 3) srand(atoi(argv[2]));
+    long n_points;
+    if ((n_points = strtol(argv[1], NULL, 10)) == 0) {
+        fprintf(stderr, "Erreur, le nombre de points doit être un entier positif\n");
+        exit(1);
+    }
 
-    int n_points = rand() % n;
-    if (n_points <= 8) {
-        n_points = 8;
+    if (argc == 3) {
+        long seed;
+        if ((seed = strtol(argv[2], NULL, 10)) == 0) {
+            fprintf(stderr, "Erreur, le seed doit être un entier positif\n");
+            exit(1);
+        }
+        srand((unsigned int) seed);
     }
 
     find_multiples(n_points, &i, &j);
@@ -202,5 +209,4 @@ int main(int argc, char *argv[]) {
     usage:
     fprintf(stderr, "usage: %s <nbPoints> [<seed>]\n", argv[0]);
     return 1;
-
 }
