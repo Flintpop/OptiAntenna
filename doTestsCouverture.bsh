@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# CPLEX
+export cplexdir=/opt/ibm/ILOG/CPLEX_Studio126
+if [ xxx"$LD_LIBRARY_PATH" = xxx ]; then
+	export LD_LIBRARY_PATH="$cplexdir"/opl/lib/x86_sles10_4.1/static_pic/:"$cplexdir"/opl/lib/x86-64_linux/shared_pic:"$cplexdir"/opl/bin/x86-64_linux/:"$cplexdir"/cplex/lib/x86-64_linux/static_pic/
+else
+	export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":"$cplexdir"/opl/lib/x86_sles10_4.1/static_pic/:"$cplexdir"/opl/lib/x86-64_linux/shared_pic:"$cplexdir"/opl/bin/x86-64_linux/:"$cplexdir"/cplex/lib/x86-64_linux/static_pic/
+fi
+export oplrun="$cplexdir"/opl/bin/x86-64_linux/oplrun
+
+# genere une serie de problemes de couverture
+export trials=10
+
+# la description des antennes
+rm -f tmpantennes.dat
+cat << FIN > tmpantennes.dat
+antennes = {
+< 3.6, 120 >,
+< 1.4, 100 >
+< 0.4, 10 >
+};
+FIN
+
+start=$(date +%s)
+stuff
+
+# Exécution des tests pour l'heuristique
+for i in $(seq  $trials)
+do
+	rm -f tmpcouverture.dat
+	cp tmpantennes.dat tmpcouverture.dat # les antennes dans le .dat du problème
+	./genPoints 100 "$i" >> tmpcouverture.dat # les points et leur matrice de visibilité ajoutés au .dat
+	$oplrun couv2heuristique.mod tmpcouverture.dat # resolution heuristique 
+	#echo val trial "$i" " : " "$(head -1 couv2.res)" # analyse partielle du resultat (val fct obj)
+done
+end=$(date +%s)
+
+rm -f tmpcouverture.dat couv2.res tmpantennes.dat
+
+runtime=$((end-start))
+
+start=$(date +%s)
+
+# Exécution des tests pour une résolution exacte
+#TODO: Faire le fichier résolution exacte
+for i in $(seq  $trials)
+do
+	rm -f tmpcouverture.dat
+	cp tmpantennes.dat tmpcouverture.dat # les antennes dans le .dat du problème
+	./genPoints 100 "$i" >> tmpcouverture.dat # les points et leur matrice de visibilité ajoutés au .dat
+	$oplrun couv.mod tmpcouverture.dat # resolution heuristique
+	#echo val trial "$i" " : " "$(head -1 couv2.res)" # analyse partielle du resultat (val fct obj)
+done
+
+end=$(date +%s)
+runtime2=$((end-start))
+
+echo "temps total pour solution exacte " "$runtime2" "s versus " "$runtime" "s pour l'heuristique"
+
+rm -f tmpcouverture.dat couv2.res tmpantennes.dat
