@@ -40,6 +40,14 @@ Pour exécuter l'optimiseur :
 [opl_command] [fichier .mod]
 ```
 
+Pour faire les tests automatisés : 
+
+```bash
+.\doTestsCouverture.bsh
+```
+
+Le nombre de points par test et le nombre de test par méthode de résolution est écrit dans le code.
+
 ## Résultats et limitations
 
 Les résultats actuels indiquent que l'heuristique nécessite des ajustements, notamment pour réduire sa complexité algorithmique. 
