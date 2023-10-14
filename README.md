@@ -44,7 +44,3 @@ Pour exécuter l'optimiseur :
 
 Les résultats actuels indiquent que l'heuristique nécessite des ajustements, notamment pour réduire sa complexité algorithmique. 
 Les détails des performances et des limitations peuvent être trouvés dans le fichier `"Rapport projet algorithmie avancé.pdf"`
-
----
-
-Vous pouvez ajuster cette ébauche en fonction des spécificités de votre projet. Notez que j'ai inclus des sections qui sont souvent utiles, mais n'hésitez pas à ajouter ou supprimer des sections selon les besoins de votre projet.
